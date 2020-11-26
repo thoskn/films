@@ -23,7 +23,7 @@ def join_with_wiki(df: pd.DataFrame) -> pd.DataFrame:
     pass
 
 
-def augment(df: pd.DataFrame) -> pd.DataFrame:
-    df = join_with_ids(df, "../data/archive/links.csv")
-    df = join_with_ratings(df, "../data/archive/ratings.csv")
+def augment(df: pd.DataFrame, links_csv_path: str, ratings_csv_path: str) -> pd.DataFrame:
+    df = join_with_ids(df, links_csv_path)
+    df = join_with_ratings(df, ratings_csv_path)
     return df
