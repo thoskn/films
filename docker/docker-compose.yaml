@@ -1,0 +1,17 @@
+version: '3'
+services:
+  database:
+    build:
+      context: ../
+      dockerfile: docker/database/Dockerfile
+    ports:
+      - 5432:5432
+    environment:
+      # shouldn't put passwords here
+      - POSTGRES_PASSWORD=pword
+  filmloader:
+    build:
+      context: ../
+      dockerfile: docker/filmloader/Dockerfile
+    environment:
+      - POSTGRES_HOST=database
