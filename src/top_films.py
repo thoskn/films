@@ -24,7 +24,6 @@ def load_data(data_path: str) -> pd.DataFrame:
     """
     df = pd.read_csv(
         data_path,
-        # TODO parse some of the new values
         usecols=[
             "budget",
             "revenue",
@@ -33,16 +32,17 @@ def load_data(data_path: str) -> pd.DataFrame:
             "production_companies",
             "release_date",
         ],
+        # TODO don't do this, make the links.csv match with this
         converters={"imdb_id": lambda x: x[2:]}
     )
     df["budget"] = pd.to_numeric(df["budget"], errors="coerce")
     df["revenue"] = pd.to_numeric(df["revenue"], errors="coerce")
     df["imdb_id"] = pd.to_numeric(df["imdb_id"], errors="coerce")
-    # TODO convert to int
     df["year"] = pd.to_datetime(df["release_date"], errors="coerce").apply(
         lambda x: x.year
     )
     df.drop(columns=["release_date"], inplace=True)
+    # TODO process production companies
     return df
 
 
@@ -67,8 +67,8 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     initial_rows = df.shape[0]
     df["budget"] = df["budget"].replace(0, np.nan)
     df["revenue"] = df["revenue"].replace(0, np.nan)
-    # TODO only drop nan from budget, id, revenue
-    df = df[~df.isna().any(axis=1)]
+    # If budget or revenue is NaN then the row is useless because we can't calculate its ratio
+    df = df[~df[["budget", "revenue"]].isna().any(axis=1)]
     dropped_rows = initial_rows - df.shape[0]
     # TODO replace ALL prints with logger
     print(
@@ -78,12 +78,32 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_top_films_by_budget_revenue_ratio(data_path: str) -> pd.DataFrame:
-    # TODO doc string
+    """ Returns the 1000 films with the best budget to revenue ratio.
+
+    Loads the csv file at the given location, calculates the ratio of budget
+    to revenue and
+
+    Parameters
+    ----------
+    data_path : str
+        Path to csv file of films to load and process.
+
+    Returns
+    -------
+    pd.DataFrame
+        The 1000 films with the best budget to revenue ratio.
+        Columns:
+            title
+            imdb_id
+            budget
+            revenue
+            budget_revenue_ratio
+            year
+            production_companies
+    """
     film_metadata_df = clean_data(load_data(data_path))
     film_metadata_df["budget_revenue_ratio"] = (
         film_metadata_df["budget"] / film_metadata_df["revenue"]
     )
     top_films = film_metadata_df.sort_values(by=["budget_revenue_ratio"])[:1000]
-    # TODO some budgets are suspiciously low
-    print(top_films.head(10))
     return top_films
